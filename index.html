@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>กล่องเซอร์ไพรส์ 🎀</title>
+<meta name="description" content="สร้างลิงก์กล่องเซอร์ไพรส์น่ารัก ๆ ส่งให้คนพิเศษ">
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;
+ font-family:Arial,"Noto Sans Thai",sans-serif;color:#71364f;
+ background:linear-gradient(135deg,#fff0f8,#ffd2e7,#fff8fc);
+ overflow:hidden
+}
+.card{
+ width:min(92%,450px);padding:26px 22px;text-align:center;
+ background:rgba(255,255,255,.92);border:2px solid #ffb3d2;border-radius:30px;
+ box-shadow:0 20px 60px rgba(255,75,150,.18);position:relative;z-index:2
+}
+h1{margin:0;color:#ff4f9a;font-size:30px}
+.sub{margin:8px 0 20px;color:#9c607b}
+textarea{
+ width:100%;height:110px;resize:none;padding:14px;border:2px solid #ffc1da;
+ border-radius:18px;outline:0;font-size:16px;color:#71364f;background:#fffafd
+}
+textarea:focus{border-color:#ff70ad}
+button{
+ width:100%;margin-top:10px;padding:13px;border:0;border-radius:17px;
+ background:linear-gradient(135deg,#ff4f9a,#ff91c0);color:#fff;
+ font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 8px 18px #ff4f9a2b
+}
+.secondary{background:#fff;color:#ff4f9a;border:2px solid #ff9fc6;box-shadow:none}
+.gift{
+ font-size:105px;margin:12px 0 2px;cursor:pointer;
+ filter:drop-shadow(0 8px 8px #ff78ae30);animation:float 1.7s infinite
+}
+@keyframes float{50%{transform:translateY(-9px) rotate(3deg)}}
+.opening{animation:shake .55s}
+@keyframes shake{
+ 20%{transform:rotate(-8deg) scale(1.08)}
+ 40%{transform:rotate(8deg) scale(1.12)}
+ 60%{transform:rotate(-6deg) scale(1.1)}
+ 80%{transform:rotate(5deg) scale(1.08)}
+}
+.result{display:none;margin-top:17px;padding:20px;border-radius:22px;
+ background:#fff0f7;border:2px dashed #ff91bd;animation:pop .4s ease}
+.result h2{margin:0 0 10px;color:#ff4f9a}
+.message{font-size:19px;line-height:1.7;word-break:break-word}
+.linkbox{display:none;margin-top:12px}
+.linkbox input{width:100%;padding:11px;border:2px solid #ffc1da;border-radius:14px}
+.hint{font-size:12px;color:#b27691;margin-top:12px}
+.back{display:none}
+.heart{position:fixed;top:-30px;z-index:5;pointer-events:none;animation:fall 3.2s linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:0}}
+.spark{position:fixed;z-index:4;pointer-events:none;animation:spark 1.2s ease-out forwards}
+@keyframes spark{0%{transform:scale(.2);opacity:1}100%{transform:translate(var(--x),var(--y)) scale(1.5);opacity:0}}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div id="creator">
+    <h1>🎀 กล่องเซอร์ไพรส์ 🎀</h1>
+    <div class="sub">เขียนข้อความ แล้วสร้างลิงก์ส่งให้คนพิเศษ 💗</div>
+
+    <textarea id="text" placeholder="เช่น ขอให้วันนี้เป็นวันที่ดีนะ 💕"></textarea>
+
+    <div class="gift" id="gift" onclick="previewGift()">🎁</div>
+    <button onclick="createLink()">🔗 สร้างลิงก์เซอร์ไพรส์</button>
+
+    <div class="linkbox" id="linkbox">
+      <input id="link" readonly>
+      <button onclick="copyLink()">📋 คัดลอกลิงก์</button>
+      <button class="secondary" onclick="shareLink()">📤 แชร์ให้เพื่อน</button>
+    </div>
+    <div class="hint">ลิงก์จะเก็บข้อความไว้ใน URL ไม่ต้องใช้ฐานข้อมูล</div>
+  </div>
+
+  <div id="receiver" style="display:none">
+    <h1>💌 มีข้อความถึงคุณ</h1>
+    <div class="sub">ลองเปิดกล่องดูสิ 🎀</div>
+    <div class="gift" id="receiverGift" onclick="openGift()">🎁</div>
+    <button onclick="openGift()">✨ เปิดกล่อง</button>
+
+    <div class="result" id="result">
+      <h2>เปิดแล้ว! 💗</h2>
+      <div class="message" id="message"></div>
+    </div>
+
+    <button class="secondary back" id="back" onclick="location.href=location.pathname">
+      🎀 สร้างกล่องของฉัน
+    </button>
+  </div>
+</div>
+
+<script>
+const params=new URLSearchParams(location.search);
+const encoded=params.get("m");
+
+function encodeMessage(s){return btoa(unescape(encodeURIComponent(s)))}
+function decodeMessage(s){
+ try{return decodeURIComponent(escape(atob(s)))}catch(e){return ""}
+}
+
+if(encoded){
+ document.getElementById("creator").style.display="none";
+ document.getElementById("receiver").style.display="block";
+}
+
+function createLink(){
+ const text=document.getElementById("text").value.trim();
+ if(!text){
+   alert("พิมพ์ข้อความก่อนน้า 🎀");
+   return;
+ }
+ const url=location.origin+location.pathname+"?m="+encodeURIComponent(encodeMessage(text));
+ document.getElementById("link").value=url;
+ document.getElementById("linkbox").style.display="block";
+ burst();
+}
+
+function copyLink(){
+ const input=document.getElementById("link");
+ navigator.clipboard.writeText(input.value).then(()=>{
+   alert("คัดลอกลิงก์แล้ว 💗");
+ }).catch(()=>{
+   input.select();document.execCommand("copy");alert("คัดลอกลิงก์แล้ว 💗");
+ });
+}
+
+async function shareLink(){
+ const url=document.getElementById("link").value;
+ if(navigator.share){
+   try{await navigator.share({title:"กล่องเซอร์ไพรส์ 🎀",text:"มีอะไรน่ารัก ๆ ส่งมาให้ เปิดดูสิ 💗",url})}
+   catch(e){}
+ }else{
+   copyLink();
+ }
+}
+
+function previewGift(){
+ const gift=document.getElementById("gift");
+ gift.classList.remove("opening");
+ void gift.offsetWidth;
+ gift.classList.add("opening");
+ burst();
+}
+
+function openGift(){
+ const gift=document.getElementById("receiverGift");
+ gift.classList.remove("opening");
+ void gift.offsetWidth;
+ gift.classList.add("opening");
+
+ setTimeout(()=>{
+   const text=decodeMessage(encoded);
+   document.getElementById("message").textContent=text || "มีข้อความน่ารัก ๆ ส่งมาให้ 💗";
+   document.getElementById("result").style.display="block";
+   document.getElementById("back").style.display="block";
+   hearts();
+   burst();
+ },500);
+}
+
+function hearts(){
+ const icons=["💗","🩷","💕","🎀","✨","🌸"];
+ for(let i=0;i<28;i++){
+   const h=document.createElement("div");
+   h.className="heart";
+   h.textContent=icons[Math.floor(Math.random()*icons.length)];
+   h.style.left=Math.random()*100+"vw";
+   h.style.fontSize=(15+Math.random()*18)+"px";
+   h.style.animationDuration=(2+Math.random()*2)+"s";
+   document.body.appendChild(h);
+   setTimeout(()=>h.remove(),4500);
+ }
+}
+
+function burst(){
+ for(let i=0;i<18;i++){
+   const s=document.createElement("div");
+   s.className="spark";
+   s.textContent="✦";
+   s.style.left="50%";s.style.top="43%";
+   s.style.setProperty("--x",(Math.random()*260-130)+"px");
+   s.style.setProperty("--y",(Math.random()*220-110)+"px");
+   s.style.color="#ff6eaa";
+   s.style.fontSize=(10+Math.random()*15)+"px";
+   document.body.appendChild(s);
+   setTimeout(()=>s.remove(),1300);
+ }
+}
+</script>
+</body>
+</html>
